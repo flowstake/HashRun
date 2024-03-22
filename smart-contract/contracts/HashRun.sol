@@ -6,27 +6,30 @@ import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 contract HashRun is ChainlinkClient {
     using Chainlink for Chainlink.Request;
 
-    address private oracle;
-    bytes32 private jobId;
-    uint256 private fee;
+    // State variables
+    address private oracle; // Address of the Chainlink Oracle
+    bytes32 private jobId; // The job ID for the Chainlink request
+    uint256 private fee; // Fee for the Chainlink request
 
     address public ownerAddress;
-    address public flowstakeAddress;
+    address public flowstakeAddress; // Address of the beneficiary
     string public challengeStatus = 'ongoing';
     uint public totalDonation = 0;
     mapping(address => uint) public donorsDonations;
     bool public paused = false;
 
+    // Events
     event LogChallengeStarted(address deployerAddress);
     event LogNewDonation(address donorAddress, uint donationAmount, uint totalDonation);
     event LogChallengeStatusRefreshed(string latestStatus);
-    event LogDonationWithdrawn(address donorAddress, uint withdrawalAmount);
-    event LogFundsTransferred(address beneficiaryAddress, uint amount);
     event LogPaused();
     event LogUnpaused();
+    event LogDonationWithdrawn(address donor, uint amount);
+    event LogFundsTransferred(address beneficiary, uint amount);
 
-    modifier onlyOrganizers {
-        require(msg.sender == ownerAddress || msg.sender == flowstakeAddress, "Caller is not an organizer");
+    // Modifiers
+    modifier onlyOwner() {
+        require(msg.sender == ownerAddress, "Caller is not the owner");
         _;
     }
 
@@ -36,15 +39,16 @@ contract HashRun is ChainlinkClient {
     }
 
     constructor(address _flowstakeAddress, address _oracle, bytes32 _jobId, uint256 _fee) {
-        setPublicChainlinkToken();
+        setPublicChainlinkToken(); // Initialize the Chainlink Token
         ownerAddress = msg.sender;
         flowstakeAddress = _flowstakeAddress;
-        oracle = _oracle;
-        jobId = _jobId;
-        fee = _fee;
+        oracle = _oracle; // Set the Chainlink Oracle address
+        jobId = _jobId; // Set the job ID for the Chainlink request
+        fee = _fee; // Set the LINK fee for the request
         emit LogChallengeStarted(msg.sender);
     }
 
+    // Allows donations to the contract
     receive() external payable whenNotPaused {
         require(msg.value > 0, "No value sent");
         donorsDonations[msg.sender] += msg.value;
@@ -52,45 +56,56 @@ contract HashRun is ChainlinkClient {
         emit LogNewDonation(msg.sender, msg.value, totalDonation);
     }
 
-    function refreshChallengeStatus(string memory url, string memory path) public onlyOrganizers whenNotPaused {
-        // Chainlink request logic here...
+    // Chainlink request to update the challenge status
+    function refreshChallengeStatus(string memory url, string memory path) public onlyOwner whenNotPaused {
+        Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
+        request.add("get", url); // Set the URL for the GET request
+        request.add("path", path); // Set the path to extract data from the JSON response
+        sendChainlinkRequestTo(oracle, request, fee); // Send the request
     }
 
+    // Callback function for the Chainlink oracle response
     function fulfill(bytes32 _requestId, bytes32 _status) public recordChainlinkFulfillment(_requestId) {
-        challengeStatus = bytes32ToString(_status);
+        challengeStatus = bytes32ToString(_status); // Update the challenge status based on the oracle response
         emit LogChallengeStatusRefreshed(challengeStatus);
     }
 
-    function withdrawDonations() public whenNotPaused {
-        require(keccak256(bytes(challengeStatus)) == keccak256(bytes("failed")), "Challenge not failed");
-        uint donationAmount = donorsDonations[msg.sender];
-        require(donationAmount > 0, "No donations to withdraw");
-
-        donorsDonations[msg.sender] = 0;
-        payable(msg.sender).transfer(donationAmount);
-        emit LogDonationWithdrawn(msg.sender, donationAmount);
-    }
-
-    function transferFundsToBeneficiary() public onlyOrganizers whenNotPaused {
-        require(keccak256(bytes(challengeStatus)) == keccak256(bytes("accomplished")), "Challenge not accomplished");
-        uint amount = address(this).balance;
-        payable(flowstakeAddress).transfer(amount);
-        emit LogFundsTransferred(flowstakeAddress, amount);
-    }
-
-    function pause() public onlyOrganizers {
+    // Pauses the contract to prevent donations
+    function pause() public onlyOwner {
         paused = true;
         emit LogPaused();
     }
 
-    function unpause() public onlyOrganizers {
+    // Unpauses the contract to allow donations
+    function unpause() public onlyOwner {
         paused = false;
         emit LogUnpaused();
     }
 
-    function bytes32ToString(bytes32 _bytes32) private pure returns (string memory) {
-        // Conversion logic...
+    // Allows donors to withdraw their donations
+    function withdrawDonation() public whenNotPaused {
+        uint donationAmount = donorsDonations[msg.sender];
+        require(donationAmount > 0, "No donation to withdraw");
+
+        donorsDonations[msg.sender] = 0; // Reset the donation amount before sending to prevent re-entrancy
+        (bool sent, ) = msg.sender.call{value: donationAmount}("");
+        require(sent, "Failed to send Ether");
+
+        emit LogDonationWithdrawn(msg.sender, donationAmount);
     }
 
-    // Additional functionalities as needed...
-}
+    // Transfer the total donations to the beneficiary (flowstakeAddress)
+    function transferFunds() public onlyOwner whenNotPaused {
+        uint amount = address(this).balance;
+        require(amount > 0, "No funds to transfer");
+
+        (bool sent, ) = flowstakeAddress.call{value: amount}("");
+        require(sent, "Failed to send Ether");
+
+        emit LogFundsTransferred(flowstakeAddress, amount);
+    }
+
+    // Helper function to convert bytes32 to string
+    function bytes32ToString(bytes32 _bytes32) private pure returns (string memory) {
+        bytes memory bytesArray = new bytes(32);
+        for (uint256 i; i < 32; i++)
