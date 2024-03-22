@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 
-contract CryptoRun is ChainlinkClient {
+contract HashRun is ChainlinkClient {
     using Chainlink for Chainlink.Request;
 
     address public ownerAddress;
-    address public flowstakeAddress; // Changed from beCodeAddress to flowstakeAddress
+    address public flowstakeAddress; // Address of the beneficiary
     string public challengeStatus = 'ongoing';
     uint public totalDonation = 0;
     mapping(address => uint) public donorsDonations;
@@ -21,7 +21,7 @@ contract CryptoRun is ChainlinkClient {
     event LogChallengeStarted(address deployerAddress);
     event LogNewDonation(address donorAddress, uint donationAmount, uint totalDonation);
     event LogChallengeStatusRefreshed(string latestStatus);
-    // Additional events modified to reflect the change from BeCode to Flowstake...
+    // Additional events for HashRun...
 
     modifier onlyOrganizers {
         require(msg.sender == ownerAddress || msg.sender == flowstakeAddress, "Caller is not an organizer");
@@ -29,7 +29,7 @@ contract CryptoRun is ChainlinkClient {
     }
 
     modifier onlyOracle() {
-        // This modifier implementation would change based on the chosen oracle solution
+        // Placeholder for oracle-specific validation
         _;
     }
 
@@ -45,11 +45,11 @@ contract CryptoRun is ChainlinkClient {
 
     constructor(address _flowstakeAddress) {
         ownerAddress = msg.sender;
-        flowstakeAddress = _flowstakeAddress; // Changed from beCodeAddress to flowstakeAddress
+        flowstakeAddress = _flowstakeAddress;
         // Chainlink setup
         setPublicChainlinkToken();
-        jobId = "YourJobIdHere"; // Set your job ID here
-        fee = 0.1 * 10 ** 18; // 0.1 LINK
+        jobId = "YourJobIdHere"; // Configure with your actual job ID
+        fee = 0.1 * 10 ** 18; // Fee for the Chainlink network (0.1 LINK)
         emit LogChallengeStarted(msg.sender);
     }
 
@@ -60,17 +60,17 @@ contract CryptoRun is ChainlinkClient {
         emit LogNewDonation(msg.sender, msg.value, totalDonation);
     }
 
-    // Function to request data from the oracle
+    // Chainlink request to update the challenge status
     function refreshChallengeStatus() public onlyOrganizers whenOngoing {
-        // Chainlink request setup...
+        // Implementation for triggering a Chainlink oracle request
     }
 
-    // Callback function used by Chainlink nodes
+    // Callback function for the Chainlink oracle response
     function fulfill(bytes32 _requestId, string memory _result) public recordChainlinkFulfillment(_requestId) {
-        // Process the result...
+        // Handling the oracle's response
     }
 
-    // Withdrawal and other contract functions...
+    // Additional functions for managing donations, withdrawals, pausing, and unpausing...
 
     function pause() public onlyOrganizers whenNotPaused {
         paused = true;
