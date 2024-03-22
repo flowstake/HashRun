@@ -73,7 +73,64 @@ Transfers the total donations to the beneficiary upon successful challenge compl
 
 This contract represents a foundational structure for blockchain-based charitable initiatives, emphasizing transparency, security, and reliability through the integration of Chainlink oracles for off-chain data interaction.
 
-# Cryptorun Back
+# HashRun Contract with Chainlink Integration
+
+## Overview
+
+The HashRun smart contract is designed to manage a donation-driven challenge, leveraging the Chainlink network to interact with external data sources. This contract facilitates the collection of donations, tracking the progress of a challenge based on data from Strava, and distributing the funds to a beneficiary upon successful completion of the challenge. It employs Chainlink Oracles for secure and reliable data retrieval from Strava, ensuring the integrity and automation of challenge status updates.
+
+## Features
+
+- **Donation Management**: Users can send ETH as donations to the contract. These donations contribute towards the challenge's funding goal.
+- **Challenge Status**: Utilizes Chainlink Oracles to fetch the latest status of a specific activity from Strava (e.g., a running or cycling event). The status determines whether the challenge is ongoing, accomplished, or failed.
+- **Funds Distribution**: Upon successful completion of the challenge (as verified through Strava data), the contract automatically transfers the accumulated donations to the designated beneficiary.
+- **Withdrawal Functionality**: Donors have the ability to withdraw their donations if the challenge fails or is canceled.
+- **Pausable Contract**: The contract owner can pause and unpause the contract to temporarily halt donations and withdrawals for maintenance or emergency purposes.
+
+## Technical Summary
+
+### Contract Initialization
+
+Upon deployment, the contract is initialized with the following parameters:
+- `flowstakeAddress`: The beneficiary's address that will receive the funds upon successful completion of the challenge.
+- `oracle`: The address of the Chainlink Oracle that will fetch the activity status from Strava.
+- `jobId`: A unique identifier for the Chainlink job that specifies the task to be performed by the Oracle.
+- `fee`: The LINK token fee to be paid to the Oracle for data retrieval services.
+
+### Donation Process
+
+ETH donations are accepted through the contract's fallback function. Each donation is logged, and the total donation amount is updated accordingly.
+
+### Challenge Status Update
+
+The contract owner can initiate a status update request to Chainlink Oracles, specifying the URL and path to the desired Strava activity. The Oracle fetches the activity status from Strava and returns the data to the contract through the `fulfill` callback function. Based on the response, the contract updates the challenge's status accordingly.
+
+### Withdrawals and Fund Transfers
+
+Donors can withdraw their donations if the challenge fails. Upon successful completion of the challenge, the contract owner triggers the transfer of the total collected donations to the beneficiary's address.
+
+### Contract Pause/Unpause
+
+The contract can be paused or unpaused by the owner to temporarily disable donation and withdrawal functionalities. This feature provides an additional layer of control and security.
+
+### Strava Activity Example
+
+For demonstration purposes, the contract is configured to reference a specific Strava activity:
+- Strava Activity URL: [https://www.strava.com/activities/10037054514](https://www.strava.com/activities/10037054514)
+
+The contract utilizes this URL to verify the completion status of the activity through Chainlink Oracles, determining the outcome of the associated challenge.
+
+### Security Considerations
+
+The contract implements checks-effects-interactions patterns to mitigate reentrancy attacks, especially in withdrawal functions. Additionally, the use of Chainlink Oracles ensures the reliability and tamper-proof nature of the external data fetched from Strava.
+
+## Deployment and Usage
+
+To deploy and use the HashRun contract, ensure you have a funded Ethereum wallet with ETH for deployment and LINK tokens for paying Oracle fees. Compile and deploy the contract using Remix, Hardhat, or Truffle, providing the necessary constructor parameters. Interact with the contract through Ethereum wallet interfaces or programmatically using Web3 libraries.
+
+For further details on Chainlink Oracles and job specifications, refer to the Chainlink documentation.
+
+# Cryptorun Back - Original Documentation
 
 [UPDATE: the challenge is over! 65KM have been run, and 1.85 ETH have been collected :) Thanks to all!]
 
