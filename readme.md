@@ -1,3 +1,78 @@
+# HashRun Solidity Contract
+
+## Overview
+
+The HashRun contract is a Solidity-based smart contract designed for Ethereum networks, leveraging Chainlink oracles to interact with off-chain data. It is particularly aimed at managing charitable challenges, where donations are collected until a certain challenge is met. The status of the challenge (e.g., "ongoing", "accomplished", "failed") is determined through data fetched from external APIs via Chainlink oracles. This contract allows for donations to be made directly to the contract and provides mechanisms for funds withdrawal by the beneficiary or donors, depending on the outcome of the challenge.
+
+## Features
+
+- **Donation Management**: Collects and tracks donations towards a challenge.
+- **Oracle Integration**: Utilizes Chainlink oracles for secure and reliable off-chain data retrieval to update the challenge status.
+- **Dynamic Challenge Status**: The challenge can be in one of several states, such as "ongoing", "accomplished", or "failed", determined by external data sources.
+- **Secure Withdrawals**: Implements withdrawal patterns for both donors (in case of challenge failure) and beneficiaries (upon challenge completion).
+- **Pausable**: The contract can be paused and unpaused by the owner, providing a mechanism to stop interactions in case of emergencies or maintenance.
+
+## Contract Functions
+
+### Constructor
+Initializes the contract with the necessary parameters for Chainlink oracle requests and sets the beneficiary address.
+
+### `receive()`
+Accepts Ether donations sent to the contract.
+
+### `refreshChallengeStatus(string memory url, string memory path)`
+Triggers a Chainlink oracle request to update the challenge status based on data from an external API.
+
+### `fulfill(bytes32 _requestId, bytes32 _status)`
+A callback function used by Chainlink oracles to return the challenge status.
+
+### `pause()`
+Allows the contract owner to pause the contract.
+
+### `unpause()`
+Allows the contract owner to unpause the contract.
+
+### `withdrawDonation()`
+Enables donors to withdraw their donations if the challenge fails.
+
+### `transferFunds()`
+Transfers the total donations to the beneficiary upon successful challenge completion.
+
+## Modifiers
+
+- **`onlyOwner`**: Restricts function access to the contract owner.
+- **`whenNotPaused`**: Ensures that interactions are only allowed when the contract is not paused.
+
+## Events
+
+- **`LogChallengeStarted`**: Emitted when the contract is deployed.
+- **`LogNewDonation`**: Emitted upon receiving a new donation.
+- **`LogChallengeStatusRefreshed`**: Indicates the challenge status has been updated.
+- **`LogPaused`** and **`LogUnpaused`**: Signal the pausing and unpausing of the contract.
+- **`LogDonationWithdrawn`**: Emitted when a donor withdraws their donation.
+- **`LogFundsTransferred`**: Emitted when funds are transferred to the beneficiary.
+
+## Development and Deployment
+
+### Prerequisites
+
+- Solidity ^0.8.0
+- Chainlink contracts
+
+### Setup and Deployment
+
+1. **Configure Environment**: Set up a development environment with Truffle or Hardhat to compile and deploy the contract.
+2. **Deploy Contract**: Deploy the `HashRun` contract to an Ethereum network. Provide the constructor parameters, including the beneficiary address, Chainlink oracle address, job ID, and fee.
+3. **Verify Contract**: After deployment, verify the contract on Etherscan for transparency and interaction.
+
+## Security Considerations
+
+- **Reentrancy Guard**: Uses the Checks-Effects-Interactions pattern to prevent reentrancy attacks.
+- **Chainlink Oracles**: Relies on Chainlink for secure and reliable off-chain data fetching.
+- **Ownership and Pausability**: Implement ownership and pausable features to manage and mitigate potential issues or attacks.
+
+This contract represents a foundational structure for blockchain-based charitable initiatives, emphasizing transparency, security, and reliability through the integration of Chainlink oracles for off-chain data interaction.
+
 # Cryptorun Back
 
 [UPDATE: the challenge is over! 65KM have been run, and 1.85 ETH have been collected :) Thanks to all!]
