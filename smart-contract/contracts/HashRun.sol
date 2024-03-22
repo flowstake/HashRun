@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Assuming Chainlink is used as a replacement for Oraclize
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 
 contract CryptoRun is ChainlinkClient {
     using Chainlink for Chainlink.Request;
 
     address public ownerAddress;
-    address public beCodeAddress;
+    address public flowstakeAddress; // Changed from beCodeAddress to flowstakeAddress
     string public challengeStatus = 'ongoing';
     uint public totalDonation = 0;
     mapping(address => uint) public donorsDonations;
@@ -22,10 +21,10 @@ contract CryptoRun is ChainlinkClient {
     event LogChallengeStarted(address deployerAddress);
     event LogNewDonation(address donorAddress, uint donationAmount, uint totalDonation);
     event LogChallengeStatusRefreshed(string latestStatus);
-    // Additional events...
+    // Additional events modified to reflect the change from BeCode to Flowstake...
 
     modifier onlyOrganizers {
-        require(msg.sender == ownerAddress || msg.sender == beCodeAddress, "Caller is not an organizer");
+        require(msg.sender == ownerAddress || msg.sender == flowstakeAddress, "Caller is not an organizer");
         _;
     }
 
@@ -44,9 +43,9 @@ contract CryptoRun is ChainlinkClient {
         _;
     }
 
-    constructor(address _beCodeAddress) {
+    constructor(address _flowstakeAddress) {
         ownerAddress = msg.sender;
-        beCodeAddress = _beCodeAddress;
+        flowstakeAddress = _flowstakeAddress; // Changed from beCodeAddress to flowstakeAddress
         // Chainlink setup
         setPublicChainlinkToken();
         jobId = "YourJobIdHere"; // Set your job ID here
