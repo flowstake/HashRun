@@ -216,5 +216,5 @@ must be replaced by
 oraclize_query("URL", "json(https://pgy2ax76f9.execute-api.eu-central-1.amazonaws.com/prod/CryptoRun).challenge_status");
 ```
 
-### BeCode address
-The address of BeCode must be specified as a constructor parameter when the contract is first deployed.
+### Flowstake address
+The address of Flowstake must be specified as a constructor parameter when the contract is first deployed.
